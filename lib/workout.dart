@@ -1,13 +1,17 @@
+import 'dart:async';
+
+import 'package:interval_timer/pausable_concat.dart';
 import 'package:rxdart/rxdart.dart';
 
 class Workout {
   final int sets;
   final int workDuration;
   final int restDuration;
+  StreamController<WorkoutState> _streamController;
+  Observable<WorkoutState> workoutObservable;
+  StreamSubscription<WorkoutState> _subscription;
 
-  Workout(this.sets, this.workDuration, this.restDuration);
-
-  Observable<WorkoutState> start() {
+  Workout(this.sets, this.workDuration, this.restDuration) {
     final stateObservables = <Observable<WorkoutState>>[];
     stateObservables.add(preWorkoutObservable(sets, 5));
     for (int i = 0; i < sets; i++) {
@@ -19,7 +23,39 @@ class Workout {
       }
     }
     stateObservables.add(new Observable.just(new WorkoutFinished()));
-    return new Observable.concat(stateObservables);
+    final _workoutObservable = new Observable<WorkoutState>(new PausableConcatStream<WorkoutState>(stateObservables));
+
+    void startWorkout() {
+      _subscription = _workoutObservable.listen(
+        (workoutState) {
+          _streamController.add(workoutState);
+        },
+        onDone: () => _streamController.close(),
+        onError: (error, stackTrace) =>
+            _streamController.addError(error, stackTrace),
+      );
+    }
+
+    _streamController = new StreamController<WorkoutState>(
+        onListen: startWorkout,
+        onPause: () => _subscription?.pause(),
+        onResume: () => _subscription?.resume(),
+        onCancel: () => _subscription?.cancel());
+
+    workoutObservable = Observable<WorkoutState>(_streamController.stream);
+  }
+
+  bool get isPaused {
+    return _subscription?.isPaused ?? false;
+  }
+
+  void pause() {
+    _streamController.add(new WorkoutPaused());
+    _subscription?.pause();
+  }
+
+  void resume() {
+    _subscription?.resume();
   }
 
   WorkoutWorkPeriod workoutPeriodDelegate(
@@ -36,7 +72,8 @@ class Workout {
       int intervalsRemaining, int preWorkoutSeconds) {
     return new Observable.periodic(
             Duration(seconds: 1), (i) => preWorkoutSeconds - i)
-        .take(preWorkoutSeconds+1)//we need to make the intervals inclusive of the last second
+        .take(preWorkoutSeconds +
+            1) //we need to make the intervals inclusive of the last second
         .map((i) => new PreWorkoutCountdown(intervalsRemaining, i));
   }
 
@@ -44,7 +81,8 @@ class Workout {
       int duration, BuildDurationState createStateDelegate) {
     return new Observable.periodic(
             new Duration(seconds: 1), (i) => duration - i)
-        .take(duration+1)//we need to make the intervals inclusive of the last second
+        .take(duration +
+            1) //we need to make the intervals inclusive of the last second
         .map((i) => createStateDelegate(intervalsRemaining, i));
   }
 }

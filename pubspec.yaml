@@ -5,6 +5,10 @@ dependencies:
   flutter:
     sdk: flutter
   rxdart: "^0.16.7"
+  audioplayer:
+    git:
+      url: git@github.com:dustin-graham/audioplayer.git
+      ref: play_from_asset
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -14,12 +18,16 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
 
-
 # For information on the generic Dart part of this file, see the
 # following page: https://www.dartlang.org/tools/pub/pubspec
 
 # The following section is specific to Flutter.
 flutter:
+  assets:
+    - audio/done.m4a
+    - audio/get_ready.m4a
+    - audio/go.m4a
+    - audio/rest.m4a
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

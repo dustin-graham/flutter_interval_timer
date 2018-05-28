@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:interval_timer/duration_utility.dart';
 import 'package:interval_timer/workout_screen.dart';
 
 void main() => runApp(new MyApp());
@@ -109,11 +110,13 @@ class _WorkoutConfigScreen extends State<WorkoutConfigScreen> {
               onIncrementorChanged: _changeSets,
             ),
             new Incrementor(
+              type: IncrementorType.duration,
               label: "Work Interval",
               incrementAmount: 5,
               onIncrementorChanged: _changeWorkInterval,
             ),
             new Incrementor(
+              type: IncrementorType.duration,
               label: "Rest Interval",
               incrementAmount: 5,
               onIncrementorChanged: _changeRestInterval,
@@ -202,7 +205,7 @@ class _IncrementorState extends State<Incrementor> {
                     alignment: Alignment.center,
                     width: 150.0,
                     child: new Text(
-                      "$count",
+                      widget.type == IncrementorType.duration ? DurationUtility.formattedDurationFromSeconds(count) : "$count",
                       style: new TextStyle(
                           fontSize: 24.0, fontWeight: FontWeight.w700),
                     )),
@@ -246,21 +249,3 @@ class IconButton extends StatelessWidget {
   }
 }
 
-class SecondScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return new Scaffold(
-      appBar: new AppBar(
-        title: new Text("Second Screen"),
-      ),
-      body: new Center(
-        child: new RaisedButton(
-          onPressed: () {
-            // Navigate back to first screen when tapped!
-          },
-          child: new Text('Go back!'),
-        ),
-      ),
-    );
-  }
-}
