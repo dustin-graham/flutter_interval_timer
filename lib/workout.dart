@@ -76,24 +76,25 @@ class Workout {
     Duration netWorkoutDuration = totalWorkoutDuration - countDownDuration;
     if (actualWorkDuration < Duration(seconds: 0)) {
       // still in countdown
-      return PreWorkoutCountdown(sets, actualWorkDuration.abs().inSeconds);
+      return PreWorkoutCountdown(sets, actualWorkDuration.abs());
     } else if (actualWorkDuration < netWorkoutDuration) {
       //find out which set we are in and how much longer we have to go
       Duration totalSetDuration = workDuration + restDuration;
       final currentSet =
           actualWorkDuration.inSeconds ~/ totalSetDuration.inSeconds;
+      final setsRemaining = sets - currentSet;
       // the set is composed of both the work and the rest period, need to find out which part we are in
       final durationInSet =
-          actualWorkDuration.inSeconds % totalSetDuration.inSeconds;
-      final netDuration = durationInSet - workDuration.inSeconds;
-      final setsRemaining = sets - currentSet;
+          actualWorkDuration.inMilliseconds % totalSetDuration.inMilliseconds;
+      final netDuration = durationInSet - workDuration.inMilliseconds;
       if (netDuration < 0) {
         // we're in rest period
-        return WorkoutWorkPeriod(setsRemaining, netDuration.abs());
+        return WorkoutWorkPeriod(setsRemaining, new Duration(milliseconds: netDuration.abs()));
       } else {
         // we're in work period
+        final remainingRestMillis = restDuration.inMilliseconds - netDuration.abs();
         return WorkoutRestPeriod(
-            setsRemaining, restDuration.inSeconds - netDuration.abs());
+            setsRemaining, new Duration(milliseconds: remainingRestMillis));
       }
     } else {
       return WorkoutFinished();
@@ -113,36 +114,6 @@ class Workout {
     _subscription?.resume();
   }
 
-  WorkoutWorkPeriod workoutPeriodDelegate(
-      int intervalsRemaining, int timeRemaining) {
-    return new WorkoutWorkPeriod(intervalsRemaining, timeRemaining);
-  }
-
-  WorkoutRestPeriod workoutRestPeriodDelegate(
-      int intervalsRemaining, int timeRemaining) {
-    return new WorkoutRestPeriod(intervalsRemaining, timeRemaining);
-  }
-
-  Observable<PreWorkoutCountdown> preWorkoutObservable(
-      int intervalsRemaining, int preWorkoutSeconds) {
-    final startTime = DateTime.now();
-    return new Observable.periodic(
-            Duration(milliseconds: 500),
-            (_) => new PreWorkoutCountdown(intervalsRemaining,
-                DateTime.now().difference(startTime).inSeconds))
-        .take(preWorkoutSeconds)
-        .startWith(
-            new PreWorkoutCountdown(intervalsRemaining, preWorkoutSeconds));
-  }
-
-  Observable<DurationWorkoutState> durationObservable(int intervalsRemaining,
-      Duration duration, BuildDurationState createStateDelegate) {
-    return new Observable.periodic(
-            new Duration(seconds: 1), (i) => duration.inSeconds - i)
-        .take(duration.inSeconds)
-        .map((i) => createStateDelegate(intervalsRemaining, i))
-        .startWith(createStateDelegate(intervalsRemaining, duration.inSeconds));
-  }
 }
 
 typedef DurationWorkoutState BuildDurationState(
@@ -152,26 +123,34 @@ abstract class WorkoutState {}
 
 abstract class DurationWorkoutState extends WorkoutState {
   final int intervalsRemaining;
-  final int secondsRemaining;
+  final Duration durationRemaining;
+  int get secondsRemaining {
+    final millisRemainder = durationRemaining.inMilliseconds % 1000;
+    if (millisRemainder > 0) {
+    // need to round up to upper whole second
+      return durationRemaining.inSeconds + 1;
+    }
+    return durationRemaining.inSeconds;
+  }
 
-  DurationWorkoutState(this.secondsRemaining, this.intervalsRemaining);
+  DurationWorkoutState(this.durationRemaining, this.intervalsRemaining);
 }
 
 class WorkoutPaused extends WorkoutState {}
 
 class PreWorkoutCountdown extends DurationWorkoutState {
-  PreWorkoutCountdown(int intervalsRemaining, int secondsRemaining)
-      : super(secondsRemaining, intervalsRemaining);
+  PreWorkoutCountdown(int intervalsRemaining, Duration durationRemaining)
+      : super(durationRemaining, intervalsRemaining);
 }
 
 class WorkoutWorkPeriod extends DurationWorkoutState {
-  WorkoutWorkPeriod(int intervalsRemaining, int secondsRemaining)
-      : super(secondsRemaining, intervalsRemaining);
+  WorkoutWorkPeriod(int intervalsRemaining, Duration durationRemaining)
+      : super(durationRemaining, intervalsRemaining);
 }
 
 class WorkoutRestPeriod extends DurationWorkoutState {
-  WorkoutRestPeriod(int intervalsRemaining, int secondsRemaining)
-      : super(secondsRemaining, intervalsRemaining);
+  WorkoutRestPeriod(int intervalsRemaining, Duration durationRemaining)
+      : super(durationRemaining, intervalsRemaining);
 }
 
 class WorkoutFinished extends WorkoutState {}
