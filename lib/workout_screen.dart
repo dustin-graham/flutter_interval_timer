@@ -36,7 +36,11 @@ class _WorkoutScreen extends State<WorkoutScreen> {
         workDuration: widget.workDuration,
         restDuration: widget.restDuration,
         countDownDuration: widget.countdownDuration);
-    workoutStream = workout.workoutObservable;
+    final now = DateTime.now();
+    workoutStream = new Observable.periodic(Duration(milliseconds: 250), (_) {
+      return workout
+          .workoutStateAtElapsedDuration(DateTime.now().difference(now));
+    });
   }
 
   @override

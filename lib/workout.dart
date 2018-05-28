@@ -54,8 +54,21 @@ class Workout {
 //    workoutObservable = Observable<WorkoutState>(_streamController.stream);
   }
 
+  /// Returns the total duration of the workout program which is the sum of:
+  ///
+  /// -  Pre-workout countdown
+  /// -  Each set which is the sum of
+  ///     -  [workDuration]
+  ///     -  [restDuration] (except the last set)
+  ///
+  /// For example, if we have a 5 second pre-workout countdown,
+  /// and a 5 second work interval and a 5 second rest interval we will
+  /// have a 20 second workout program. It's not 25 seconds because the final
+  /// set leaves off the rest duration since the workout is over.
   Duration get totalWorkoutDuration {
-    return countDownDuration + ((workDuration + restDuration) * sets);
+    return countDownDuration +
+        ((workDuration + restDuration) * sets) -
+        restDuration;
   }
 
   WorkoutState workoutStateAtElapsedDuration(Duration elapsedDuration) {
@@ -76,8 +89,7 @@ class Workout {
       final setsRemaining = sets - currentSet;
       if (netDuration < 0) {
         // we're in rest period
-        return WorkoutWorkPeriod(
-            setsRemaining, netDuration.abs());
+        return WorkoutWorkPeriod(setsRemaining, netDuration.abs());
       } else {
         // we're in work period
         return WorkoutRestPeriod(
