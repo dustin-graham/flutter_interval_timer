@@ -6,24 +6,23 @@ import 'package:audioplayer/audioplayer.dart';
 
 class WorkoutScreen extends StatefulWidget {
   final int sets;
-  final int workDuration;
-  final int restDuration;
+  final Duration countdownDuration;
+  final Duration workDuration;
+  final Duration restDuration;
 
   const WorkoutScreen(
-      {Key key, this.sets, this.workDuration, this.restDuration})
+      {Key key,
+      this.sets,
+      this.workDuration,
+      this.restDuration,
+      this.countdownDuration = const Duration(seconds: 5)})
       : super(key: key);
 
   @override
-  State<StatefulWidget> createState() =>
-      _WorkoutScreen();
+  State<StatefulWidget> createState() => _WorkoutScreen();
 }
 
-enum WorkoutAudio {
-  getReady,
-  go,
-  rest,
-  done
-}
+enum WorkoutAudio { getReady, go, rest, done }
 
 class _WorkoutScreen extends State<WorkoutScreen> {
   Workout workout;
@@ -32,7 +31,11 @@ class _WorkoutScreen extends State<WorkoutScreen> {
   WorkoutAudio lastPlayedAudio;
 
   _initializeWorkout() {
-    workout = new Workout(widget.sets, widget.workDuration, widget.restDuration);
+    workout = new Workout(
+        sets: widget.sets,
+        workDuration: widget.workDuration,
+        restDuration: widget.restDuration,
+        countDownDuration: widget.countdownDuration);
     workoutStream = workout.workoutObservable;
   }
 
@@ -50,7 +53,7 @@ class _WorkoutScreen extends State<WorkoutScreen> {
   }
 
   String _audioPathForType(WorkoutAudio audio) {
-    switch(audio) {
+    switch (audio) {
       case WorkoutAudio.getReady:
         return "audio/get_ready.m4a";
       case WorkoutAudio.go:
@@ -74,7 +77,8 @@ class _WorkoutScreen extends State<WorkoutScreen> {
     Navigator.pop(context);
   }
 
-  _bodyWidget(BuildContext context, bool paused, int intervalsRemaining, int secondsRemaining, String helperText) {
+  _bodyWidget(BuildContext context, bool paused, int intervalsRemaining,
+      int secondsRemaining, String helperText) {
     final TextTheme textTheme = Theme.of(context).textTheme;
     final stack = <Widget>[];
     if (paused) {
@@ -136,17 +140,33 @@ class _WorkoutScreen extends State<WorkoutScreen> {
             bodyWidget = new Center(child: new Text("Paused"));
           } else if (workoutState is PreWorkoutCountdown) {
             _maybePlayAudio(WorkoutAudio.getReady);
-            bodyWidget = _bodyWidget(context, false, workoutState.intervalsRemaining, workoutState.secondsRemaining, "GET READY");
+            bodyWidget = _bodyWidget(
+                context,
+                false,
+                workoutState.intervalsRemaining,
+                workoutState.secondsRemaining,
+                "GET READY");
           } else if (workoutState is WorkoutWorkPeriod) {
             _maybePlayAudio(WorkoutAudio.go);
-            bodyWidget = _bodyWidget(context, false, workoutState.intervalsRemaining, workoutState.secondsRemaining, "WORK IT!");
+            bodyWidget = _bodyWidget(
+                context,
+                false,
+                workoutState.intervalsRemaining,
+                workoutState.secondsRemaining,
+                "WORK IT!");
           } else if (workoutState is WorkoutRestPeriod) {
             _maybePlayAudio(WorkoutAudio.rest);
-            bodyWidget = _bodyWidget(context, false, workoutState.intervalsRemaining, workoutState.secondsRemaining, "REST NOW");
+            bodyWidget = _bodyWidget(
+                context,
+                false,
+                workoutState.intervalsRemaining,
+                workoutState.secondsRemaining,
+                "REST NOW");
           } else if (workoutState is WorkoutFinished) {
             _maybePlayAudio(WorkoutAudio.done);
             isFinished = true;
-            bodyWidget = new Center(child: new Column(
+            bodyWidget = new Center(
+                child: new Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 new Padding(
@@ -155,27 +175,37 @@ class _WorkoutScreen extends State<WorkoutScreen> {
                 ),
                 new Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: new RaisedButton(onPressed: () {
-                    _restart();
-                  }, child: new Text("RESTART"),),
+                  child: new RaisedButton(
+                    onPressed: () {
+                      _restart();
+                    },
+                    child: new Text("RESTART"),
+                  ),
                 ),
                 new Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: new RaisedButton(onPressed: () {
-                    _finish(context);
-                  }, child: new Text("FINISH"),),
+                  child: new RaisedButton(
+                    onPressed: () {
+                      _finish(context);
+                    },
+                    child: new Text("FINISH"),
+                  ),
                 ),
               ],
             ));
           }
 
           return new Scaffold(
-              floatingActionButton: isFinished ? null : new FloatingActionButton(
-                onPressed: isPaused ? () => workout.resume() : () => workout.pause(),
-                child: isPaused
-                    ? new Icon(Icons.play_arrow)
-                    : new Icon(Icons.pause),
-              ),
+              floatingActionButton: isFinished
+                  ? null
+                  : new FloatingActionButton(
+                      onPressed: isPaused
+                          ? () => workout.resume()
+                          : () => workout.pause(),
+                      child: isPaused
+                          ? new Icon(Icons.play_arrow)
+                          : new Icon(Icons.pause),
+                    ),
               body: bodyWidget);
         });
   }

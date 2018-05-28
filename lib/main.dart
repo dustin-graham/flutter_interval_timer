@@ -55,8 +55,8 @@ class _WorkoutConfigScreen extends State<WorkoutConfigScreen> {
           new MaterialPageRoute(
               builder: (context) => new WorkoutScreen(
                   sets: _sets,
-                  workDuration: _workInterval,
-                  restDuration: _restInterval)),
+                  workDuration: Duration(seconds: _workInterval),
+                  restDuration: Duration(seconds: _restInterval))),
         );
   }
 

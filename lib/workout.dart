@@ -1,48 +1,91 @@
 import 'dart:async';
 
 import 'package:interval_timer/pausable_concat.dart';
+import 'package:meta/meta.dart';
 import 'package:rxdart/rxdart.dart';
 
 class Workout {
   final int sets;
-  final int workDuration;
-  final int restDuration;
+  final Duration countDownDuration;
+  final Duration workDuration;
+  final Duration restDuration;
   StreamController<WorkoutState> _streamController;
   Observable<WorkoutState> workoutObservable;
   StreamSubscription<WorkoutState> _subscription;
 
-  Workout(this.sets, this.workDuration, this.restDuration) {
-    final stateObservables = <Observable<WorkoutState>>[];
-    stateObservables.add(preWorkoutObservable(sets, 5));
-    for (int i = 0; i < sets; i++) {
-      stateObservables.add(
-          durationObservable(sets - i, workDuration, workoutPeriodDelegate));
-      if (i < sets - 1) {
-        stateObservables.add(durationObservable(
-            sets - i, restDuration, workoutRestPeriodDelegate));
+  Workout(
+      {@required this.sets,
+      @required this.workDuration,
+      @required this.restDuration,
+      @required this.countDownDuration}) {
+//    final stateObservables = <Observable<WorkoutState>>[];
+//    stateObservables.add(preWorkoutObservable(sets, 5));
+//    for (int i = 0; i < sets; i++) {
+//      stateObservables.add(
+//          durationObservable(sets - i, workDuration, workoutPeriodDelegate));
+//      if (i < sets - 1) {
+//        stateObservables.add(durationObservable(
+//            sets - i, restDuration, workoutRestPeriodDelegate));
+//      }
+//    }
+//    stateObservables.add(new Observable.just(new WorkoutFinished()));
+//    final _workoutObservable = new Observable<WorkoutState>(
+//        new PausableConcatStream<WorkoutState>(stateObservables));
+//
+//    void startWorkout() {
+//      print("starting workout");
+//      _subscription = _workoutObservable.listen(
+//        (workoutState) {
+//          print("workout State: $workoutState");
+//          _streamController.add(workoutState);
+//        },
+//        onDone: () => _streamController.close(),
+//        onError: (error, stackTrace) =>
+//            _streamController.addError(error, stackTrace),
+//      );
+//    }
+//
+//    _streamController = new StreamController<WorkoutState>(
+//        onListen: startWorkout,
+//        onPause: () => _subscription?.pause(),
+//        onResume: () => _subscription?.resume(),
+//        onCancel: () => _subscription?.cancel());
+//
+//    workoutObservable = Observable<WorkoutState>(_streamController.stream);
+  }
+
+  Duration get totalWorkoutDuration {
+    return countDownDuration + ((workDuration + restDuration) * sets);
+  }
+
+  WorkoutState workoutStateAtElapsedDuration(Duration elapsedDuration) {
+    Duration actualWorkDuration = elapsedDuration - countDownDuration;
+    Duration netWorkoutDuration = totalWorkoutDuration - countDownDuration;
+    if (actualWorkDuration < Duration(seconds: 0)) {
+      // still in countdown
+      return PreWorkoutCountdown(sets, actualWorkDuration.abs().inSeconds);
+    } else if (actualWorkDuration < netWorkoutDuration) {
+      //find out which set we are in and how much longer we have to go
+      Duration totalSetDuration = workDuration + restDuration;
+      final currentSet =
+          actualWorkDuration.inSeconds ~/ totalSetDuration.inSeconds;
+      // the set is composed of both the work and the rest period, need to find out which part we are in
+      final durationInSet =
+          actualWorkDuration.inSeconds % totalSetDuration.inSeconds;
+      final netDuration = durationInSet - workDuration.inSeconds;
+      final setsRemaining = sets - currentSet;
+      if (netDuration < 0) {
+        // we're in rest period
+        return WorkoutWorkPeriod(
+            setsRemaining, netDuration.abs());
+      } else {
+        // we're in work period
+        return WorkoutRestPeriod(
+            setsRemaining, restDuration.inSeconds - netDuration.abs());
       }
+    } else {
+      return WorkoutFinished();
     }
-    stateObservables.add(new Observable.just(new WorkoutFinished()));
-    final _workoutObservable = new Observable<WorkoutState>(new PausableConcatStream<WorkoutState>(stateObservables));
-
-    void startWorkout() {
-      _subscription = _workoutObservable.listen(
-        (workoutState) {
-          _streamController.add(workoutState);
-        },
-        onDone: () => _streamController.close(),
-        onError: (error, stackTrace) =>
-            _streamController.addError(error, stackTrace),
-      );
-    }
-
-    _streamController = new StreamController<WorkoutState>(
-        onListen: startWorkout,
-        onPause: () => _subscription?.pause(),
-        onResume: () => _subscription?.resume(),
-        onCancel: () => _subscription?.cancel());
-
-    workoutObservable = Observable<WorkoutState>(_streamController.stream);
   }
 
   bool get isPaused {
@@ -70,20 +113,23 @@ class Workout {
 
   Observable<PreWorkoutCountdown> preWorkoutObservable(
       int intervalsRemaining, int preWorkoutSeconds) {
+    final startTime = DateTime.now();
     return new Observable.periodic(
-            Duration(seconds: 1), (i) => preWorkoutSeconds - i)
-        .take(preWorkoutSeconds +
-            1) //we need to make the intervals inclusive of the last second
-        .map((i) => new PreWorkoutCountdown(intervalsRemaining, i));
+            Duration(milliseconds: 500),
+            (_) => new PreWorkoutCountdown(intervalsRemaining,
+                DateTime.now().difference(startTime).inSeconds))
+        .take(preWorkoutSeconds)
+        .startWith(
+            new PreWorkoutCountdown(intervalsRemaining, preWorkoutSeconds));
   }
 
   Observable<DurationWorkoutState> durationObservable(int intervalsRemaining,
-      int duration, BuildDurationState createStateDelegate) {
+      Duration duration, BuildDurationState createStateDelegate) {
     return new Observable.periodic(
-            new Duration(seconds: 1), (i) => duration - i)
-        .take(duration +
-            1) //we need to make the intervals inclusive of the last second
-        .map((i) => createStateDelegate(intervalsRemaining, i));
+            new Duration(seconds: 1), (i) => duration.inSeconds - i)
+        .take(duration.inSeconds)
+        .map((i) => createStateDelegate(intervalsRemaining, i))
+        .startWith(createStateDelegate(intervalsRemaining, duration.inSeconds));
   }
 }
 
