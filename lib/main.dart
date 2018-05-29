@@ -7,13 +7,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 void main() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   Defaults defaults = new Defaults(prefs);
-  runApp(new MyApp(defaults: defaults,));
+  runApp(new MyApp(
+    defaults: defaults,
+  ));
 }
 
 class MyApp extends StatelessWidget {
   final Defaults defaults;
 
   const MyApp({Key key, this.defaults}) : super(key: key);
+
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
@@ -31,13 +34,16 @@ class MyApp extends StatelessWidget {
         // counter didn't reset back to zero; the application is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: new WorkoutConfigScreen(defaults: defaults,),
+      home: new WorkoutConfigScreen(
+        defaults: defaults,
+      ),
     );
   }
 }
 
 class WorkoutConfigScreen extends StatefulWidget {
   Defaults defaults;
+
   WorkoutConfigScreen({Key key, this.title, this.defaults}) : super(key: key);
 
   // This widget is the home page of your application. It is stateful, meaning
@@ -59,6 +65,14 @@ class _WorkoutConfigScreen extends State<WorkoutConfigScreen> {
   int _sets = 0;
   int _workInterval = 0;
   int _restInterval = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _sets = widget.defaults.getDefaultSets();
+    _workInterval = widget.defaults.getDefaultWorkDuration();
+    _restInterval = widget.defaults.getDefaultRestDurationSeconds();
+  }
 
   void _startWorkout(BuildContext contex) {
     Navigator.of(context).push(
@@ -144,7 +158,8 @@ class Incrementor extends StatefulWidget {
       this.label,
       this.type,
       this.incrementAmount,
-      this.onIncrementorChanged, this.initialValue})
+      this.onIncrementorChanged,
+      this.initialValue})
       : super(key: key);
 
   @override
@@ -200,7 +215,9 @@ class _IncrementorState extends State<Incrementor> {
                     alignment: Alignment.center,
                     width: 150.0,
                     child: new Text(
-                      widget.type == IncrementorType.duration ? DurationUtility.formattedDurationFromSeconds(count) : "$count",
+                      widget.type == IncrementorType.duration
+                          ? DurationUtility.formattedDurationFromSeconds(count)
+                          : "$count",
                       key: new Key("incrementor-value-label"),
                       style: new TextStyle(
                           fontSize: 24.0, fontWeight: FontWeight.w700),
@@ -244,4 +261,3 @@ class IconButton extends StatelessWidget {
     );
   }
 }
-

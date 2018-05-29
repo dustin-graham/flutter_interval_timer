@@ -105,16 +105,37 @@ class WorkoutPaused extends WorkoutState {}
 class PreWorkoutCountdown extends DurationWorkoutState {
   PreWorkoutCountdown(int intervalsRemaining, Duration durationRemaining)
       : super(durationRemaining, intervalsRemaining);
+
+  @override
+  String toString() {
+    return 'PreWorkoutCountdown{$secondsRemaining}';
+  }
+
+
 }
 
 class WorkoutWorkPeriod extends DurationWorkoutState {
   WorkoutWorkPeriod(int intervalsRemaining, Duration durationRemaining)
       : super(durationRemaining, intervalsRemaining);
+
+  @override
+  String toString() {
+    return 'WorkoutWorkPeriod{$secondsRemaining}';
+  }
+
+
 }
 
 class WorkoutRestPeriod extends DurationWorkoutState {
   WorkoutRestPeriod(int intervalsRemaining, Duration durationRemaining)
       : super(durationRemaining, intervalsRemaining);
+
+  @override
+  String toString() {
+    return 'WorkoutRestPeriod{$secondsRemaining}';
+  }
+
+
 }
 
 class WorkoutFinished extends WorkoutState {}
