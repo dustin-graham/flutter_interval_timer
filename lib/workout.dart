@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:interval_timer/pausable_concat.dart';
 import 'package:meta/meta.dart';
 import 'package:rxdart/rxdart.dart';
 
@@ -17,42 +16,7 @@ class Workout {
       {@required this.sets,
       @required this.workDuration,
       @required this.restDuration,
-      @required this.countDownDuration}) {
-//    final stateObservables = <Observable<WorkoutState>>[];
-//    stateObservables.add(preWorkoutObservable(sets, 5));
-//    for (int i = 0; i < sets; i++) {
-//      stateObservables.add(
-//          durationObservable(sets - i, workDuration, workoutPeriodDelegate));
-//      if (i < sets - 1) {
-//        stateObservables.add(durationObservable(
-//            sets - i, restDuration, workoutRestPeriodDelegate));
-//      }
-//    }
-//    stateObservables.add(new Observable.just(new WorkoutFinished()));
-//    final _workoutObservable = new Observable<WorkoutState>(
-//        new PausableConcatStream<WorkoutState>(stateObservables));
-//
-//    void startWorkout() {
-//      print("starting workout");
-//      _subscription = _workoutObservable.listen(
-//        (workoutState) {
-//          print("workout State: $workoutState");
-//          _streamController.add(workoutState);
-//        },
-//        onDone: () => _streamController.close(),
-//        onError: (error, stackTrace) =>
-//            _streamController.addError(error, stackTrace),
-//      );
-//    }
-//
-//    _streamController = new StreamController<WorkoutState>(
-//        onListen: startWorkout,
-//        onPause: () => _subscription?.pause(),
-//        onResume: () => _subscription?.resume(),
-//        onCancel: () => _subscription?.cancel());
-//
-//    workoutObservable = Observable<WorkoutState>(_streamController.stream);
-  }
+      @required this.countDownDuration});
 
   /// Returns the total duration of the workout program which is the sum of:
   ///

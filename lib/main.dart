@@ -22,7 +22,7 @@ class MyApp extends StatelessWidget {
         // counter didn't reset back to zero; the application is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: new WorkoutConfigScreen(title: 'Flutter Demo Home Page'),
+      home: new WorkoutConfigScreen(),
     );
   }
 }
@@ -61,61 +61,40 @@ class _WorkoutConfigScreen extends State<WorkoutConfigScreen> {
   }
 
   _changeSets(int sets) {
-    print("got $sets sets");
     _sets = sets;
   }
 
   _changeWorkInterval(int workIntervalDuration) {
-    print("got $workIntervalDuration work duration");
     _workInterval = workIntervalDuration;
   }
 
   _changeRestInterval(int restInterval) {
-    print("got $restInterval rest duration");
     _restInterval = restInterval;
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return new Scaffold(
       body: new Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
         child: new Column(
-          // Column is also layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug paint" (press "p" in the console where you ran
-          // "flutter run", or select "Toggle Debug Paint" from the Flutter tool
-          // window in IntelliJ) to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
             new Incrementor(
+              key: new Key("interval-count-setter"),
               label: "Sets",
               incrementAmount: 1,
               onIncrementorChanged: _changeSets,
             ),
             new Incrementor(
+              key: new Key("work-duration-setter"),
               type: IncrementorType.duration,
               label: "Work Interval",
               incrementAmount: 5,
               onIncrementorChanged: _changeWorkInterval,
             ),
             new Incrementor(
+              key: new Key("rest-duration-setter"),
               type: IncrementorType.duration,
               label: "Rest Interval",
               incrementAmount: 5,
@@ -206,6 +185,7 @@ class _IncrementorState extends State<Incrementor> {
                     width: 150.0,
                     child: new Text(
                       widget.type == IncrementorType.duration ? DurationUtility.formattedDurationFromSeconds(count) : "$count",
+                      key: new Key("incrementor-value-label"),
                       style: new TextStyle(
                           fontSize: 24.0, fontWeight: FontWeight.w700),
                     )),
