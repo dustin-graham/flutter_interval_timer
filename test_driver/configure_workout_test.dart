@@ -1,6 +1,8 @@
 import 'package:flutter_driver/flutter_driver.dart';
 import 'package:test/test.dart';
 
+import 'configure_workout_screen.dart';
+
 void main() {
   FlutterDriver driver;
 
@@ -11,67 +13,48 @@ void main() {
   tearDownAll(() {
     driver?.close();
   });
-
+  
   test('Configure Workout', () async {
-    // setup finders
-    // value labels
-    var intervalValueLabelFinder =
-        find.byValueKey("interval-count-setter-value-label");
-    var workDurationValueLabelFinder =
-        find.byValueKey("work-duration-setter-value-label");
-    var restDurationValueLabelFinder =
-        find.byValueKey("rest-duration-setter-value-label");
+    final screen = new ConfigureWorkoutScreen(driver);
 
-    // interval buttons
-    var intervalUpButton = find.byValueKey("interval-count-setter-more-button");
-    var intervalDownButton = find.byValueKey("interval-count-setter-less-button");
+    // verify initial values
+    expect(await screen.intervalCountElement.getValueLabel(), "2");
+    expect(await screen.workDurationElement.getValueLabel(), "00:20");
+    expect(await screen.restDurationElement.getValueLabel(), "00:20");
 
-    // work duration buttons
-    var workDurationUpButton = find.byValueKey("work-duration-setter-more-button");
-    var workDurationDownButton = find.byValueKey("work-duration-setter-less-button");
-
-    // rest duration buttons
-    var restDurationUpButton = find.byValueKey("rest-duration-setter-more-button");
-    var restDurationDownButton = find.byValueKey("rest-duration-setter-less-button");
-
-    // verify the initial values
-    expect(await driver.getText(intervalValueLabelFinder), "2");
-    expect(await driver.getText(workDurationValueLabelFinder), "00:20");
-    expect(await driver.getText(restDurationValueLabelFinder), "00:20");
-
-    // tap the buttons and make sure the UI shows correctly
+    // tab the buttons and make sure the UI shows correctly
     // increase the interval count by 1
-    await driver.tap(intervalUpButton);
-    expect(await driver.getText(intervalValueLabelFinder), "3");
+    await screen.intervalCountElement.tapMore();
+    expect(await screen.intervalCountElement.getValueLabel(), "3");
 
     // tap interval down button 5 times
     for(int i = 0; i < 5; i++) {
-      await driver.tap(intervalDownButton);
+      await screen.intervalCountElement.tapLess();
     }
     // UI should not let the interval count go below 1
-    expect(await driver.getText(intervalValueLabelFinder), "1");
+    expect(await screen.intervalCountElement.getValueLabel(), "1");
 
     // tap the work duration up once
-    await driver.tap(workDurationUpButton);
+    await screen.workDurationElement.tapMore();
     // should count by 5
-    expect(await driver.getText(workDurationValueLabelFinder), "00:25");
+    expect(await screen.workDurationElement.getValueLabel(), "00:25");
 
     // tap the work duration down 10 times
     for (int i = 0; i < 10; i++) {
-      await driver.tap(workDurationDownButton);
+      await screen.workDurationElement.tapLess();
     }
     // min value for this field is 5
-    expect(await driver.getText(workDurationValueLabelFinder), "00:05");
+    expect(await screen.workDurationElement.getValueLabel(), "00:05");
 
     // tap the rest duration up once
-    await driver.tap(restDurationUpButton);
-    expect(await driver.getText(restDurationValueLabelFinder), "00:25");
+    await screen.restDurationElement.tapMore();
+    expect(await screen.restDurationElement.getValueLabel(), "00:25");
 
     // tap the rest duration down 10 times
     for (int i = 0; i < 10; i++) {
-      await driver.tap(restDurationDownButton);
+      await screen.restDurationElement.tapLess();
     }
     // min value for this field is 5
-    expect(await driver.getText(restDurationValueLabelFinder), "00:05");
+    expect(await screen.restDurationElement.getValueLabel(), "00:05");
   });
 }
