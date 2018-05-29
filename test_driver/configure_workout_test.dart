@@ -50,5 +50,28 @@ void main() {
     }
     // UI should not let the interval count go below 1
     expect(await driver.getText(intervalValueLabelFinder), "1");
+
+    // tap the work duration up once
+    await driver.tap(workDurationUpButton);
+    // should count by 5
+    expect(await driver.getText(workDurationValueLabelFinder), "00:25");
+
+    // tap the work duration down 10 times
+    for (int i = 0; i < 10; i++) {
+      await driver.tap(workDurationDownButton);
+    }
+    // min value for this field is 5
+    expect(await driver.getText(workDurationValueLabelFinder), "00:05");
+
+    // tap the rest duration up once
+    await driver.tap(restDurationUpButton);
+    expect(await driver.getText(restDurationValueLabelFinder), "00:25");
+
+    // tap the rest duration down 10 times
+    for (int i = 0; i < 10; i++) {
+      await driver.tap(restDurationDownButton);
+    }
+    // min value for this field is 5
+    expect(await driver.getText(restDurationValueLabelFinder), "00:05");
   });
 }
