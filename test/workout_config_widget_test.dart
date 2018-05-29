@@ -31,16 +31,9 @@ void main() {
     configureSharedPrefs();
   });
 
-
   verifyIncrementorValueLabel(
       WidgetTester tester, String keyName, String expectedValue) {
-    var incrementorValueLabelFinder =
-        find.byKey(new Key("incrementor-value-label"));
-
-    var intervalCountSetterFinder = find.byKey(new Key(keyName));
-    expect(intervalCountSetterFinder, findsOneWidget);
-    var intervalCountValueLabelFinder = find.descendant(
-        of: intervalCountSetterFinder, matching: incrementorValueLabelFinder);
+    var intervalCountValueLabelFinder = find.byKey(new Key(keyName));
     Text intervalCountValueLabelWidget =
         tester.widget(intervalCountValueLabelFinder);
     expect(intervalCountValueLabelWidget.data, expectedValue);
@@ -81,12 +74,15 @@ void main() {
     ));
 
     // verify initial sets count setter
-    verifyIncrementorValueLabel(tester, "interval-count-setter", "50");
+    verifyIncrementorValueLabel(
+        tester, "interval-count-setter-value-label", "50");
 
     // verify initial work duration setter
-    verifyIncrementorValueLabel(tester, "work-duration-setter", "05:00");
+    verifyIncrementorValueLabel(
+        tester, "work-duration-setter-value-label", "05:00");
 
     // verify initial rest duration setter
-    verifyIncrementorValueLabel(tester, "rest-duration-setter", "02:00");
+    verifyIncrementorValueLabel(
+        tester, "rest-duration-setter-value-label", "02:00");
   });
 }
