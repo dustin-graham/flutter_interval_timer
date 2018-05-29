@@ -190,6 +190,8 @@ class _IncrementorState extends State<Incrementor> {
 
   @override
   Widget build(BuildContext context) {
+    final parentKeyBase = (widget.key as ValueKey<String>).value;
+    print("************ parentKeyBase: $parentKeyBase");
     return new Padding(
       padding: const EdgeInsets.all(16.0),
       child: new Column(
@@ -206,6 +208,7 @@ class _IncrementorState extends State<Incrementor> {
             child: new Row(
               children: <Widget>[
                 new IconButton(
+                  key: new Key("${(widget.key as ValueKey<String>).value}-less-button"),
                   iconData: Icons.indeterminate_check_box,
                   onTap: () {
                     _decrement();
@@ -218,11 +221,12 @@ class _IncrementorState extends State<Incrementor> {
                       widget.type == IncrementorType.duration
                           ? DurationUtility.formattedDurationFromSeconds(count)
                           : "$count",
-                      key: new Key("incrementor-value-label"),
+                      key: new Key("${(widget.key as ValueKey<String>).value}-value-label"),
                       style: new TextStyle(
                           fontSize: 24.0, fontWeight: FontWeight.w700),
                     )),
                 new IconButton(
+                  key: new Key("${(widget.key as ValueKey<String>).value}-more-button"),
                   iconData: Icons.add_box,
                   onTap: () {
                     _increment();
