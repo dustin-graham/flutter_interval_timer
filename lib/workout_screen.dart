@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:interval_timer/duration_utility.dart';
 import 'package:interval_timer/workout.dart';
+import 'package:interval_timer/workout_runner.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:audioplayer/audioplayer.dart';
 
@@ -26,6 +27,7 @@ enum WorkoutAudio { getReady, go, rest, done }
 
 class _WorkoutScreen extends State<WorkoutScreen> {
   Workout workout;
+  WorkoutRunner workoutRunner;
   Observable<WorkoutState> workoutStream;
   AudioPlayer audioPlayer = new AudioPlayer();
   WorkoutAudio lastPlayedAudio;
@@ -36,11 +38,10 @@ class _WorkoutScreen extends State<WorkoutScreen> {
         workDuration: widget.workDuration,
         restDuration: widget.restDuration,
         countDownDuration: widget.countdownDuration);
-    final now = DateTime.now();
-    workoutStream = new Observable.periodic(Duration(milliseconds: 250), (_) {
-      return workout
-          .workoutStateAtElapsedDuration(DateTime.now().difference(now));
-    });
+    workoutRunner?.close();
+    workoutRunner = new WorkoutRunner(workout);
+    workoutStream = workoutRunner.workoutStateObservable();
+    workoutRunner.start();
   }
 
   @override
@@ -78,7 +79,14 @@ class _WorkoutScreen extends State<WorkoutScreen> {
   }
 
   _finish(BuildContext context) {
+    workoutRunner?.close();
     Navigator.pop(context);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    workoutRunner?.close();
   }
 
   _bodyWidget(BuildContext context, bool paused, int intervalsRemaining,
@@ -132,6 +140,7 @@ class _WorkoutScreen extends State<WorkoutScreen> {
   @override
   Widget build(BuildContext context) {
     return new StreamBuilder<WorkoutState>(
+        initialData: new PreWorkoutCountdown(widget.sets, widget.countdownDuration),
         stream: workoutStream,
         builder: (context, snapshot) {
           var workoutState = snapshot.data;
@@ -204,8 +213,8 @@ class _WorkoutScreen extends State<WorkoutScreen> {
                   ? null
                   : new FloatingActionButton(
                       onPressed: isPaused
-                          ? () => workout.resume()
-                          : () => workout.pause(),
+                          ? () => workoutRunner.resume()
+                          : () => workoutRunner.pause(),
                       child: isPaused
                           ? new Icon(Icons.play_arrow)
                           : new Icon(Icons.pause),
