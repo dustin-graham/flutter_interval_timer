@@ -1,10 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:interval_timer/defaults.dart';
 import 'package:interval_timer/duration_utility.dart';
 import 'package:interval_timer/workout_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-void main() => runApp(new MyApp());
+void main() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  Defaults defaults = new Defaults(prefs);
+  runApp(new MyApp(defaults: defaults,));
+}
 
 class MyApp extends StatelessWidget {
+  final Defaults defaults;
+
+  const MyApp({Key key, this.defaults}) : super(key: key);
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
@@ -22,13 +31,14 @@ class MyApp extends StatelessWidget {
         // counter didn't reset back to zero; the application is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: new WorkoutConfigScreen(),
+      home: new WorkoutConfigScreen(defaults: defaults,),
     );
   }
 }
 
 class WorkoutConfigScreen extends StatefulWidget {
-  WorkoutConfigScreen({Key key, this.title}) : super(key: key);
+  Defaults defaults;
+  WorkoutConfigScreen({Key key, this.title, this.defaults}) : super(key: key);
 
   // This widget is the home page of your application. It is stateful, meaning
   // that it has a State object (defined below) that contains fields that affect
@@ -82,12 +92,14 @@ class _WorkoutConfigScreen extends State<WorkoutConfigScreen> {
           children: <Widget>[
             new Incrementor(
               key: new Key("interval-count-setter"),
+              initialValue: widget.defaults.getDefaultSets(),
               label: "Sets",
               incrementAmount: 1,
               onIncrementorChanged: _changeSets,
             ),
             new Incrementor(
               key: new Key("work-duration-setter"),
+              initialValue: widget.defaults.getDefaultWorkDuration(),
               type: IncrementorType.duration,
               label: "Work Interval",
               incrementAmount: 5,
@@ -95,6 +107,7 @@ class _WorkoutConfigScreen extends State<WorkoutConfigScreen> {
             ),
             new Incrementor(
               key: new Key("rest-duration-setter"),
+              initialValue: widget.defaults.getDefaultRestDurationSeconds(),
               type: IncrementorType.duration,
               label: "Rest Interval",
               incrementAmount: 5,
@@ -124,21 +137,24 @@ class Incrementor extends StatefulWidget {
   final IncrementorType type;
   final int incrementAmount;
   final OnIncrementorChanged onIncrementorChanged;
+  final int initialValue;
 
   const Incrementor(
       {Key key,
       this.label,
       this.type,
       this.incrementAmount,
-      this.onIncrementorChanged})
+      this.onIncrementorChanged, this.initialValue})
       : super(key: key);
 
   @override
-  _IncrementorState createState() => new _IncrementorState();
+  _IncrementorState createState() => new _IncrementorState(initialValue);
 }
 
 class _IncrementorState extends State<Incrementor> {
-  int count = 0;
+  int count;
+
+  _IncrementorState(this.count);
 
   _increment() {
     setState(() {

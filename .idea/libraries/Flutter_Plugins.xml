@@ -2,6 +2,7 @@
   <library name="Flutter Plugins" type="FlutterPluginsLibraryType">
     <CLASSES>
       <root url="file://$USER_HOME$/.pub-cache/git/audioplayer-dbaee53f7afa7686ae8412757d52191dd7abf967" />
+      <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dartlang.org/shared_preferences-0.4.1" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

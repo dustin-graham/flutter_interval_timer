@@ -5,32 +5,89 @@
 // are correct.
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:interval_timer/defaults.dart';
 
 import 'package:interval_timer/main.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  testWidgets('Workout config initializes with defaults', (WidgetTester tester) async {
+  setUp(() {
+    const MethodChannel('plugins.flutter.io/shared_preferences')
+        .setMockMethodCallHandler((MethodCall methodCall) async {
+      if (methodCall.method == 'getAll') {
+        return <String, dynamic>{}; // set initial values here if desired
+      }
+      return null;
+    });
+  });
+
+  overrideSharedPrefDefaults(Map<String, dynamic> defaults) {
+    const MethodChannel('plugins.flutter.io/shared_preferences')
+        .setMockMethodCallHandler((MethodCall methodCall) async {
+      if (methodCall.method == 'getAll') {
+        // for some reason shared_prefs needs a prefix
+        return defaults.map((k, v) => MapEntry("flutter.$k", v));
+      }
+      return null;
+    });
+  }
+
+  verifyIncrementorValueLabel(
+      WidgetTester tester, String keyName, String expectedValue) {
+    var incrementorValueLabelFinder =
+        find.byKey(new Key("incrementor-value-label"));
+
+    var intervalCountSetterFinder = find.byKey(new Key(keyName));
+    expect(intervalCountSetterFinder, findsOneWidget);
+    var intervalCountValueLabelFinder = find.descendant(
+        of: intervalCountSetterFinder, matching: incrementorValueLabelFinder);
+    Text intervalCountValueLabelWidget =
+        tester.widget(intervalCountValueLabelFinder);
+    expect(intervalCountValueLabelWidget.data, expectedValue);
+  }
+
+  testWidgets('Workout config initializes with defaults',
+      (WidgetTester tester) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    Defaults defaults = new Defaults(prefs);
     // Build our app and trigger a frame.
-    await tester.pumpWidget(new MyApp());
+    await tester.pumpWidget(new MyApp(
+      defaults: defaults,
+    ));
 
-    // Verify that our counter starts at 0.
-    var incrementorValueLabelFinder = find.byKey(new Key("incrementor-value-label"));
-    var durationSetterFinder = find.byKey(new Key("work-duration-setter"));
-    expect(durationSetterFinder, findsOneWidget);
-    var workDurationValueLabelFinder = find.descendant(of: durationSetterFinder, matching: incrementorValueLabelFinder);
-    expect(workDurationValueLabelFinder, findsOneWidget);
-    var workDurationValueLabelText = tester.widget(workDurationValueLabelFinder) as Text;
-    expect(workDurationValueLabelText.data, "00:05");
+    // verify initial sets count setter
+    verifyIncrementorValueLabel(tester, "interval-count-setter", "2");
 
-//    expect(find.text('1'), findsNothing);
-//
-//     Tap the '+' icon and trigger a frame.
-//    await tester.tap(find.byIcon(Icons.add));
-//    await tester.pump();
-//
-//     Verify that our counter has incremented.
-//    expect(find.text('0'), findsNothing);
-//    expect(find.text('1'), findsOneWidget);
+    // verify initial work duration setter
+    verifyIncrementorValueLabel(tester, "work-duration-setter", "00:20");
+
+    // verify initial rest duration setter
+    verifyIncrementorValueLabel(tester, "rest-duration-setter", "00:20");
+  });
+
+  testWidgets('workout config defaults respect user settings',
+      (WidgetTester tester) async {
+    overrideSharedPrefDefaults({
+      Defaults.lastUsedSets: 50,
+      Defaults.lastUsedWorkDurationSeconds: 300, // 05:00
+      Defaults.lastUsedRestDurationSeconds: 120 // 02:00
+    });
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    Defaults defaults = new Defaults(prefs);
+    // Build our app and trigger a frame.
+    await tester.pumpWidget(new MyApp(
+      defaults: defaults,
+    ));
+
+    // verify initial sets count setter
+    verifyIncrementorValueLabel(tester, "interval-count-setter", "50");
+
+    // verify initial work duration setter
+    verifyIncrementorValueLabel(tester, "work-duration-setter", "05:00");
+
+    // verify initial rest duration setter
+    verifyIncrementorValueLabel(tester, "rest-duration-setter", "02:00");
   });
 }
