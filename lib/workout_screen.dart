@@ -144,7 +144,6 @@ class _WorkoutScreen extends State<WorkoutScreen> {
         stream: workoutStream,
         builder: (context, snapshot) {
           var workoutState = snapshot.data;
-          print("workout state type: $workoutState");
           Widget bodyWidget;
           bool isPaused = false;
           bool isFinished = false;
