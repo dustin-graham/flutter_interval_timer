@@ -110,6 +110,7 @@ class _WorkoutConfigScreen extends State<WorkoutConfigScreen> {
               label: "Sets",
               incrementAmount: 1,
               onIncrementorChanged: _changeSets,
+              minValue: 1,
             ),
             new Incrementor(
               key: new Key("work-duration-setter"),
@@ -118,6 +119,7 @@ class _WorkoutConfigScreen extends State<WorkoutConfigScreen> {
               label: "Work Interval",
               incrementAmount: 5,
               onIncrementorChanged: _changeWorkInterval,
+              minValue: 5,
             ),
             new Incrementor(
               key: new Key("rest-duration-setter"),
@@ -126,6 +128,7 @@ class _WorkoutConfigScreen extends State<WorkoutConfigScreen> {
               label: "Rest Interval",
               incrementAmount: 5,
               onIncrementorChanged: _changeRestInterval,
+              minValue: 5,
             ),
           ],
         ),
@@ -152,6 +155,7 @@ class Incrementor extends StatefulWidget {
   final int incrementAmount;
   final OnIncrementorChanged onIncrementorChanged;
   final int initialValue;
+  final int minValue;
 
   const Incrementor(
       {Key key,
@@ -159,7 +163,7 @@ class Incrementor extends StatefulWidget {
       this.type,
       this.incrementAmount,
       this.onIncrementorChanged,
-      this.initialValue})
+      this.initialValue, this.minValue = 0})
       : super(key: key);
 
   @override
@@ -181,8 +185,8 @@ class _IncrementorState extends State<Incrementor> {
   _decrement() {
     setState(() {
       count = count - widget.incrementAmount;
-      if (count < 0) {
-        count = 0;
+      if (count < widget.minValue) {
+        count = widget.minValue;
       }
       widget.onIncrementorChanged(count);
     });
